@@ -1,7 +1,17 @@
-#include  <iostream>
+#include <iostream>
 
 int ** makeMtx(int ** mtx, size_t m, size_t n) {
+    int** mtxR = new int* [m];
 
+    try {
+        for (size_t i = 0; i < m; ++i) {
+            mtxR[i] = new int [n];
+        }
+    }
+    catch (const std::bad_alloc& e) {
+        rmMtx(mtxR, m);
+    }
+    return mtxR;
 }
 
 int ** transpose(int ** mtx, size_t m, size_t n) {
@@ -9,14 +19,32 @@ int ** transpose(int ** mtx, size_t m, size_t n) {
 }
 
 void rmMtx(int ** mtx, size_t m) {
+    for (size_t i = 0; i < m; ++i) {
+        delete[] mtx[i];
+    }
+    delete[] mtx;
 
+}
+
+void printMtx() {
+    std::cout << mtx[0][0];
+    for (size_t i = 0; i < m; ++i) {
+        std::cout << ' ' << mtx[0][i];
+    }
+
+    for (size_t i = 0; i < m; ++i) {
+        std::cout << '\n';
+        for (size_t j = 0; j < n; ++j) {
+            std::cout << ' ' << mtx[i][j];
+        }
+    }
 }
 
 int main() {
     size_t m = 0;
     size_t n = 0;
     std::cin >> m >> n;
-    if (!std::cin) {
+    if (!std::cin || m == 0 || n == 0) {
         return 1;
     }
 
@@ -24,15 +52,17 @@ int main() {
     mtx = makeMtx(mtx, m, n);
 
     for (size_t i = 0; i < m*n; ++i) {
-        std::cin >> mtx[i / m][i % m];
+        std::cin >> mtx[i % m][i / m];
+    }
+
+    if (std::cin.fail()) {
+        rmMtx(mtx, m);
+        return 1;
     }
 
     transpose();
 
-    for (size_t i = 0; i < m*n; ++i) {
-        std::cout << mtx[i / m][i % m] << " ";
-    }
-
+    printMtx();
     rmMtx(mtx, m);
 
     return 0;
