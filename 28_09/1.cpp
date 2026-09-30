@@ -1,69 +1,94 @@
-#include <iostream>
+  #include <iostream>
 
-int ** makeMtx(int ** mtx, size_t m, size_t n) {
-    int** mtxR = new int* [m];
-
-    try {
-        for (size_t i = 0; i < m; ++i) {
-            mtxR[i] = new int [n];
-        }
-    }
-    catch (const std::bad_alloc& e) {
-        rmMtx(mtxR, m);
-    }
-    return mtxR;
-}
-
-int ** transpose(int ** mtx, size_t m, size_t n) {
-
-}
-
-void rmMtx(int ** mtx, size_t m) {
+  void rmMtx(int **mtx, const size_t m) {
     for (size_t i = 0; i < m; ++i) {
-        delete[] mtx[i];
+      delete[] mtx[i];
     }
     delete[] mtx;
+  }
 
-}
-
-void printMtx() {
+  void printMtx(int **mtx, const size_t m, const size_t n) {
     std::cout << mtx[0][0];
-    for (size_t i = 0; i < m; ++i) {
-        std::cout << ' ' << mtx[0][i];
+    for (size_t i = 1; i < n; ++i) {
+      std::cout << ' ' << mtx[0][i];
     }
 
-    for (size_t i = 0; i < m; ++i) {
-        std::cout << '\n';
-        for (size_t j = 0; j < n; ++j) {
-            std::cout << ' ' << mtx[i][j];
-        }
+    for (size_t i = 1; i < m; ++i) {
+      std::cout << '\n' << mtx[i][0];
+      for (size_t j = 1; j < n; ++j) {
+        std::cout << ' ' << mtx[i][j];
+      }
     }
-}
+    std::cout << '\n';
+  }
 
-int main() {
+  int **makeMtx(int **mtx, const size_t m, const size_t n) {
+    int **mtxR = new int *[m];
+    try {
+      for (size_t i = 0; i < m; ++i) {
+        mtxR[i] = new int [n];
+      }
+    } catch (const std::bad_alloc &e) {
+      rmMtx(mtxR, m);
+      throw;
+    }
+    return mtxR;
+  }
+
+  int ** transpose(int ** mtx, const size_t m, const size_t n) {
+    int ** mtxTr = makeMtx(mtx, m, n);
+    for (size_t i = 0; i < m; ++i) {
+      for (size_t j = 0; j < n; ++j) {
+        mtxTr[i][j] = mtx[j][i];
+        // std::cout << "i: " << i << " j: " << j << '\n';
+      }
+    }
+    return mtxTr;
+  }
+
+  int main() {
     size_t m = 0;
     size_t n = 0;
     std::cin >> m >> n;
     if (!std::cin || m == 0 || n == 0) {
-        return 1;
+      return 1;
     }
 
-    int ** mtx = nullptr;
-    mtx = makeMtx(mtx, m, n);
+    int **mtx = nullptr;
+    try {
+      mtx = makeMtx(mtx, m, n);
+    } catch (...) {
+      return 2;
+    }
 
-    for (size_t i = 0; i < m*n; ++i) {
-        std::cin >> mtx[i % m][i / m];
+
+    for (size_t i = 0; i < m; ++i) {
+      for (size_t j = 0; j < n; ++j) {
+        std::cin >> mtx[i][j];
+      }
     }
 
     if (std::cin.fail()) {
-        rmMtx(mtx, m);
-        return 1;
+      rmMtx(mtx, m);
+      return 1;
     }
 
-    transpose();
+    const size_t k = n;
+    const size_t l = m;
+    // размерность меняется
+    int ** mtxTr = nullptr;
+    try {
+      mtxTr = transpose(mtx, k, l);
+    } catch (...) {
+      return 2;
+    }
 
-    printMtx();
+    std::cout << '\n';
+    printMtx(mtx, m, n);
+    std::cout << '\n';
+    printMtx(mtxTr, k, l);
     rmMtx(mtx, m);
+    rmMtx(mtxTr, k);
 
     return 0;
-}
+  }
