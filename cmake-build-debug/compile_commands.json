@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/home/pablo6612/CLionProjects/Classwork/cmake-build-debug",
+  "command": "/usr/bin/c++ -g -std=gnu++17 -fdiagnostics-color=always -o CMakeFiles/task_28_09.dir/28_09/1.cpp.o -c /home/pablo6612/CLionProjects/Classwork/28_09/1.cpp",
+  "file": "/home/pablo6612/CLionProjects/Classwork/28_09/1.cpp",
+  "output": "/home/pablo6612/CLionProjects/Classwork/cmake-build-debug/CMakeFiles/task_28_09.dir/28_09/1.cpp.o"
+}
+]

@@ -1,0 +1,3 @@
+/home/pablo6612/CLionProjects/Classwork/cmake-build-debug/CMakeFiles/task_28_09.dir
+/home/pablo6612/CLionProjects/Classwork/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/pablo6612/CLionProjects/Classwork/cmake-build-debug/CMakeFiles/rebuild_cache.dir
