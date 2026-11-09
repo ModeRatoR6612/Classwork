@@ -1,12 +1,20 @@
 #include <iostream>
 #include <limits>
 
+struct p_t {
+  int x;
+  int y;
+};
+
 class Ints {
 public:
   Ints();
   Ints(size_t size, int value);
   Ints(Ints const& rhs);
-  Ints & Ints::operator=(const Ints & rhs);
+  Ints(Ints && rhs) noexcept;
+  Ints & operator=(const Ints & rhs) noexcept;
+  Ints & operator=(Ints && rhs) noexcept;
+  Ints operator+(const Ints & rhs) const;
   ~Ints();
 
   size_t getSize() const noexcept;
@@ -21,7 +29,7 @@ public:
 
   static Ints unitializated_ints(size_t size);
 private:
-  size_t sizdata.get(e;
+  size_t size;
   size_t capacity;
   int * data;
   int * resize(int * data);
@@ -57,7 +65,17 @@ Ints::Ints(Ints const& rhs):
   }
 }
 
-Ints & Ints::operator=(const Ints & rhs)
+Ints::Ints(Ints && rhs) noexcept:
+  capacity(rhs.capacity),
+  size(rhs.size),
+  data(rhs.data)
+{
+  rhs.capacity = 0;
+  rhs.size = 0;
+  rhs.data = nullptr;
+}
+
+Ints & Ints::operator=(const Ints & rhs) noexcept
 {
   if (this == &rhs) {
     return *this;
@@ -68,6 +86,39 @@ Ints & Ints::operator=(const Ints & rhs)
   std::swap(data, temp.data);
 
   return *this;
+}
+
+Ints & Ints::operator=(Ints && rhs) noexcept
+{
+  if (this != &rhs) {
+    delete [] data;
+
+    capacity = rhs.capacity;
+    size = rhs.size;
+    data = rhs.data;
+
+    rhs.data = nullptr;
+    rhs.capacity = 0;
+    rhs.size = 0;
+  }
+
+  return *this;
+}
+
+Ints Ints::operator+(const Ints & rhs) const {
+  if (getSize() != rhs.getSize()) {
+    throw std::invalid_argument("Arrays have diff size");
+  }
+
+  Ints result(getSize(), 0);
+  for (size_t i = 0; i < getSize(); i++) {
+    if (rhs.get(i) > std::numeric_limits< int >::max() - get(i) || rhs.get(i) < std::numeric_limits< int >::min() + get(i)) {
+      throw std::invalid_argument("Overflow");
+    }
+    result.set(i, rhs.get(i) + get(i));
+  }
+
+  return result;
 }
 
 Ints::~Ints() {
@@ -204,7 +255,35 @@ Mtx Mtx::addRow(const int pasta) {
   return res;
 }
 
+class Points {
+
+};
+
+class Plot
+{
+public:
+  void set(int x, int y);
+  int calc(int x);
+  size_t solve(Ints & buf, int y);
+  Points append(p_t p);
+private:
+  Ints data;
+};
+
+size_t Plot::solve(Ints & buf, int y) {
+  size_t cnt = 0;
+  for (size_t i = 1; i < data.getSize(); i+=2) {
+    if (y == data.get(i)) {
+      buf.append(data.get(i-1));
+      cnt++;
+    }
+  }
+  return cnt;
+}
+
 int main() {
-  Ints s;
+  Ints a(10, 67);
+  Ints b(10, 69);
+  Ints c = a + b + a + b;
   return 0;
 }
