@@ -333,6 +333,89 @@ int Mtx::det() const{
   return res;
 }
 
+class Mtxs {
+public:
+  Mtxs();
+  Mtxs(size_t const size, const Mtx & mtx);
+  Mtxs(const Mtxs & rhs);
+  Mtxs(Mtxs && rhs) noexcept;
+  ~Mtxs();
+
+  Mtxs & operator=(const Mtxs & rhs);
+
+  Mtxs &operator=(Mtxs &&rhs) noexcept;
+
+private:
+  size_t size;
+  Mtx * arr_mtx;
+};
+
+Mtxs::Mtxs():
+  size(0), arr_mtx(nullptr)
+{}
+
+Mtxs::Mtxs(const size_t size, const Mtx & mtx):
+  size(size), arr_mtx(new Mtx[size])
+{
+  for (size_t i = 0; i < size; i++) {
+    try {
+      arr_mtx[i] = mtx;
+    } catch (...) {
+      delete [] arr_mtx;
+      throw;
+    }
+  }
+}
+
+Mtxs::Mtxs(const Mtxs & rhs):
+  size(rhs.size), arr_mtx(new Mtx[rhs.size])
+{
+  for (size_t i = 0; i < size; i++) {
+    arr_mtx[i] = rhs.arr_mtx[i];
+  }
+}
+
+Mtxs & Mtxs::operator=(const Mtxs & rhs) {
+  if (this == &rhs) {
+    return *this;
+  }
+
+  Mtxs temp(rhs);
+  std::swap(size, temp.size);
+  std::swap(arr_mtx, temp.arr_mtx);
+
+  return *this;
+}
+
+Mtxs & Mtxs::operator=(Mtxs && rhs) noexcept
+{
+  if (this != &rhs) {
+    delete [] arr_mtx;
+
+    size = rhs.size;
+    arr_mtx = rhs.arr_mtx;
+
+    rhs.arr_mtx = nullptr;
+    rhs.size = 0;
+  }
+
+  return *this;
+}
+
+Mtxs::Mtxs(Mtxs && rhs) noexcept:
+  size(rhs.size),
+  arr_mtx(rhs.arr_mtx)
+{
+  rhs.size = 0;
+  rhs.arr_mtx = nullptr;
+}
+
+Mtxs::~Mtxs()
+{
+  delete [] arr_mtx;
+}
+
+
 class Points {
   Ints data_points;
 public:
