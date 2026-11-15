@@ -204,7 +204,7 @@ class Mtx {
   Ints data_mtx;
   // m - кол-во строк  n - кол-во столбцов
 
-  public:
+public:
   Mtx();
   Mtx(size_t m, size_t n);
   Mtx(size_t m, size_t n, const Ints &data);
@@ -233,6 +233,22 @@ Mtx::Mtx(size_t m, size_t n):
 Mtx::Mtx(size_t m, size_t n, const Ints &data):
   m(m), n(n), data_mtx(data)
 {}
+
+Mtx & Mtx::operator=(Mtx && rhs) noexcept{
+  if (this != &rhs) {
+    delete [] data_mtx;
+
+    m = rhs.m;
+    n = rhs.n;
+    data_mtx = rhs.data_mtx;
+
+    rhs.m = 0;
+    rhs.n = 0;
+    rhs.data_mtx = Ints();
+  }
+
+  return *this;
+}
 
 Mtx Mtx::sum(Mtx const& rhs) const {
   Mtx result(m, n);
@@ -336,15 +352,83 @@ int Mtx::det() const{
 class Mtxs {
 public:
   Mtxs();
+  Mtxs(size_t const size);
   Mtxs(size_t const size, const Mtx & mtx);
+  Mtxs(size_t const size, const Mtx * data);
   Mtxs(const Mtxs & rhs);
   Mtxs(Mtxs && rhs) noexcept;
   ~Mtxs();
 
   Mtxs & operator=(const Mtxs & rhs);
-
   Mtxs &operator=(Mtxs &&rhs) noexcept;
+  Mtx &operator[](const size_t i);
+  const Mtx &operator[](const size_t i) const;
+  Mtxs operator+(const Mtxs & rhs) const;
+  Mtxs operator+(Mtxs && rhs) const;
 
+  Mtxs erase(const size_t ind) const {
+    if (size == 0) throw std::logic_error("Can't erase empty arr");
+    Mtxs res(size-1);
+
+    size_t p = 0;
+    for (size_t i = 0; i < size; i++) {
+      if (i == ind) continue;
+      res[p++] = (*this)[i];
+    }
+
+    return res;
+  }
+
+  Mtxs erase(const size_t l, const size_t r) const {
+    if (size == 0) throw std::logic_error("Can't erase empty arr");
+    Mtxs res(size - (r-l));
+    size_t i = 0;
+
+    for (; i < l; i++) {
+      res[i] = (*this)[i];
+    }
+    i += r-l;
+    for (size_t j = l; j < res.size; j++) {
+      res[j] = (*this)[i];
+      i++;
+    }
+
+    return res;
+  }
+
+  Mtxs erase() const {
+    return erase(size-1);
+  }
+
+  Mtxs insert(size_t const ind, const Mtx & mtx) const {
+    Mtxs res(size+1);
+    size_t p = 0;
+
+    for (size_t i = 0; i < size+1; i++) {
+      if (i == ind) {
+        res[i] = mtx;
+        continue;
+      }
+      res[i] = (*this)[p++];
+    }
+
+    return res;
+  }
+
+  Mtxs insert(size_t ind, const Mtxs & mtxs) const {
+    Mtxs res(size+mtxs.size);
+    size_t p = 0;
+
+    for (size_t i = 0; i < ind; i++) res[p++] = (*this)[i];
+    for (size_t i = 0; i < mtxs.size; i++) res[p++] = mtxs[i];
+    for (size_t i = ind; i < size; i++) res[p++] = (*this)[i];
+
+    return res;
+  }
+
+  Mtxs insert(const Mtx & mtx) const {
+    return insert(size, mtx);
+  }
 private:
   size_t size;
   Mtx * arr_mtx;
@@ -353,6 +437,11 @@ private:
 Mtxs::Mtxs():
   size(0), arr_mtx(nullptr)
 {}
+
+Mtxs::Mtxs(size_t const size):
+  size(size), arr_mtx(new Mtx[size])
+{}
+
 
 Mtxs::Mtxs(const size_t size, const Mtx & mtx):
   size(size), arr_mtx(new Mtx[size])
@@ -364,6 +453,14 @@ Mtxs::Mtxs(const size_t size, const Mtx & mtx):
       delete [] arr_mtx;
       throw;
     }
+  }
+}
+
+Mtxs::Mtxs(size_t const size, const Mtx * data):
+  size(size), arr_mtx(new Mtx[size])
+{
+  for (size_t i = 0; i < size; i++) {
+    arr_mtx[i] = data[i];
   }
 }
 
@@ -415,6 +512,45 @@ Mtxs::~Mtxs()
   delete [] arr_mtx;
 }
 
+const Mtx & Mtxs::operator[](const size_t i) const {
+  return arr_mtx[i];
+}
+
+Mtx & Mtxs::operator[](const size_t i) {
+  return arr_mtx[i];
+}
+
+Mtxs Mtxs::operator+(const Mtxs & rhs) const {
+  Mtxs res(size + rhs.size);
+
+  for (size_t i = 0; i < size; i++) {
+    res[i] = (*this)[i];
+  }
+
+  for (size_t i = size; i < rhs.size + size; i++) {
+    res[i] = rhs.arr_mtx[i - size];
+  }
+
+  return res;
+}
+
+Mtxs Mtxs::operator+(Mtxs && rhs) const {
+  Mtxs res(size + rhs.size);
+
+  for (size_t i = 0; i < size; i++) {
+    res[i] = (*this)[i];
+  }
+
+  for (size_t i = size; i < rhs.size + size; i++) {
+    res[i] = std::move(rhs.arr_mtx[i - size]);
+  }
+
+  delete [] rhs.arr_mtx;
+  rhs.size = 0;
+  rhs.arr_mtx = nullptr;
+
+  return res;
+}
 
 class Points {
   Ints data_points;
