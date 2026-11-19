@@ -1,8 +1,19 @@
 #include <iostream>
 
+constexpr size_t PLANAR_SIZE = 3;
+int planarTypes[PLANAR_SIZE] = {1, 2, 3};
+
 constexpr double PI = 3.14159265358979323846;
 
 enum Color {RED, GREEN, BLUE};
+Color makeColor(char c) {
+  switch (c) {
+    case 'R': return Color::RED;
+    case 'G': return Color::GREEN;
+    case 'B': return Color::BLUE;
+    default: throw std::invalid_argument("invalid color");
+  }
+}
 
 class Planar {
   public:
@@ -40,6 +51,14 @@ private:
   int x_, y_;
 };
 
+Planar * clonePoint (std::istream & in) {
+  int x = 0, y = 0;
+  if (in >> x >> y) {
+    return new Point(x, y);
+  }
+  return nullptr;
+}
+
 class Vector: public Planar {
 public:
   Vector(Point x, Point y):
@@ -56,6 +75,14 @@ public:
 private:
   Point a_, b_;
 };
+
+Planar * cloneVector (std::istream & in) {
+  int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+  if (in >> x1 >> y1 << x2) {
+    return new Point(x, y);
+  }
+  return nullptr;
+}
 
 class ColoredPoint: public Planar, public Colored {
 public:
@@ -91,6 +118,19 @@ private:
   Color cl_;
 };
 
+// Planar * fabricPlanar(std::istream & in) {
+//   int num = 0;
+//   in >> num;
+//   switch (num) {
+//     case 1: return clonePoint(in);
+//     case 2: return cloneVector(in);
+//     case 3: return cloneColoredPoint(in);
+//     case 4: return cloneBrush(in);
+//     default: throw std::invalid_argument("invalid option");
+//   }
+// }
+
+std::ostream& print_abs_sqr(std::ostream& out, Planar * pl) {
 class Circle: public Planar {
 public:
   Circle(Point center, int radius):
@@ -158,6 +198,73 @@ void del(Planar * pls[], size_t size) {
   }
 }
 
+
+namespace fabric {
+  class AbstractFabricPlanar {
+  public:
+    virtual ~AbstractFabricPlanar() = default;
+
+    virtual Planar * create(std::istream& in) = 0;
+  };
+
+  class FabricPoint : public AbstractFabricPlanar {
+    public:
+      virtual Planar * create(std::istream& in) override {
+        int x = 0, y = 0;
+        if (in >> x >> y) {
+          return new Point(x, y);
+        }
+        throw std::invalid_argument("Invalid input");
+      }
+      ~FabricPoint() override = default;
+  };
+
+  class FabricVector : public AbstractFabricPlanar {
+  public:
+    virtual Planar * create(std::istream& in) override {
+      int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+      if (in >> x1 >> y1 << x2) {
+        return new Vector(Point(x1, y1), Point(x2, y2));
+      }
+      throw std::invalid_argument("Invalid input");
+    }
+  };
+
+  class FabricColoredPoint : public AbstractFabricPlanar {
+    public:
+      virtual Planar * create(std::istream& in) override {
+        int x = 0 , y = 0;
+        char ch = ' ';
+        if (in >> x >> y >> ch) {
+          return new ColoredPoint(Point(x, y), makeColor(ch));
+        }
+        throw std::invalid_argument("Invalid input");
+      }
+  };
+
+  void delFabricsPlanar(AbstractFabricPlanar ** fabricsPlanar, const size_t size) {
+    for (size_t j = 0; j < size; ++j) {
+      delete fabricsPlanar[j];
+    }
+    delete[] fabricsPlanar;
+  }
+
+  AbstractFabricPlanar ** makeFabircs() {
+    AbstractFabricPlanar ** fabricsPlanar = new AbstractFabricPlanar*[PLANAR_SIZE];
+    size_t i = 0;
+
+    try {
+      fabricsPlanar[i++] = new FabricPoint();
+      fabricsPlanar[i++] = new FabricVector();
+      fabricsPlanar[i++] = new FabricColoredPoint();
+    } catch (...) {
+      delFabricsPlanar(fabricsPlanar, i);
+      throw std::logic_error("Bad alloc");
+    }
+    return fabricsPlanar;
+  }
+}
+
 int main() {
   constexpr size_t cap = 10;
   Planar * pls[cap];
@@ -183,6 +290,19 @@ int main() {
   }
 
   del(pls, size);
+
+
+  if (!(std::cin >> size)) {
+    std::cerr << "Invalid input" << '\n';
+    return 1;
+  }
+
+  Planar ** pls = nullptr;
+  try {
+    pls = new Planar * [size];
+  } catch (...) {
+
+  }
 
   return 0;
 }
